@@ -60,17 +60,13 @@ transpose(){ #tranpose the given matrix
         #output the columns horizontally with a tab after each number and a newline at the end
         for j in $(seq 0 1 $(expr $rows - 1)) #loop for each row
         do
-            # echo -n -e ${postTrans[$j]} #print the number at the given index
-            echo -n -e ${postTrans[$j]} >> trans.txt
+            echo -n -e ${postTrans[$j]} >> trans.txt #print the number at the given index
 
             if [ $j = $(expr $rows - 1) ]; then #if the increment is the last element
-                # echo -e -n "\n" #print a newline
-                echo -e -n "\n" >> trans.txt
+                echo -e -n "\n" >> trans.txt #print a newline
                 break #do not print a tab
             fi
-
-            # echo -n -e "\t" #print a tab
-            echo -n -e "\t" >> trans.txt
+            echo -n -e "\t" >> trans.txt #print a tab
         done
     done
 }
@@ -248,19 +244,17 @@ multiply(){
         exit -1
     fi
 
+    #transpose matrix2 to make dot product easier
     temp=$mat1
-    temp2=$mat2
     mat1=$mat2
-    mat2=
+    mat2= # clear mat2 for transpose function
     transpose
     mat2="trans.txt"
     mat1=$temp
 
-    cat $mat1
-    echo "done!"
-    cat $mat2
-
-    exit 1
+    # cat $mat1
+    # echo "done!"
+    # cat $mat2
 
     flagTab=0 #flag to print tab
 
@@ -268,6 +262,7 @@ multiply(){
     #outer loop to determine index of array
     for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
     do
+        dot=0
         #inner loop to get numbers from matrices
         #position of number determined by outer loop
         for i in $(seq 1 1 $cols1) #loop for the number of columns
@@ -278,7 +273,8 @@ multiply(){
             fi
 
             #reset variables
-            # sum2=0
+            product=0
+            # dot=0
             matCol1Arr=()
             matCol2Arr=()
             #get numbers from matrices
@@ -296,20 +292,16 @@ multiply(){
                 matCol2Arr+=( $num )
             done
 
+            # index2=$(expr $i - 1)
+            product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
+            # echo "product: " $product
+            dot=$(expr $dot + $product)
+            # echo "dot: " $dot
 
-            #used to bypass error when adding 0 + 0
-            if [ ${matCol1Arr[$j]}=0 ] || [ ${matCol2Arr[$j]}=0 ]; then
-                # echo -n "0"
-                pass=1
-            else
-                #add the two numbers together and print it without a newline
-                # sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]}) 
-                # echo -n $sum
-                pass=1
-            fi
             
             flagTab=1 #print a tab with the next loop
         done
+        echo "dot: " $dot
         flagTab=0 #reset variable
         # echo -n -e "\n" #print newline
     done
