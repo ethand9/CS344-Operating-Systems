@@ -252,27 +252,24 @@ multiply(){
     mat2="trans.txt"
     mat1=$temp
 
-    # cat $mat1
-    # echo "done!"
-    # cat $mat2
-
     flagTab=0 #flag to print tab
 
-    #get numbers and add them
-    #outer loop to determine index of array
+    #get numbers and multiply matrices
+    #first loop to determine index of first array
     for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
     do
-        #inner loop to get numbers from matrices
-        #position of number determined by outer loop
+        #second loop to determine index of second array\
         for k in $(seq 0 1 $(expr $rows1 - 1))
         do
             if [ $flagTab = 1 ]; then #if it is not the first iteration of the inner loop
                 echo -n -e "\t"       #then print a tab
             fi
-            
-            dot=0
+            # echo "here1.1"
+            dot=0 #reset dot product
+            # third loop to iterate through columns and get dot product
             for i in $(seq 1 1 $cols1)
             do
+                # echo "here2"
                 #reset variables
                 product=0
                 matCol1Arr=()
@@ -291,38 +288,36 @@ multiply(){
                 do
                     matCol2Arr+=( $num )
                 done
-
-                if [ ${matCol1Arr[$j]} = 0 ] || [ ${matCol1Arr[$j]} = 0 ]; then
+                # echo "here5"
+                #used to bypass error of multiply by 0
+                if [ ${matCol1Arr[$j]} = 0 ] || [ ${matCol1Arr[$k]} = 0 ]; then
+                    # echo "here6"
                     product=0
                 else
+                    #get product of the numbers at the indeces
+                    # echo "here7"
+                    # echo "arr1: " ${matCol1Arr[$j]}
+                    # echo "arr2: " ${matCol2Arr[$k]}
                     product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$k]}) 
                 fi
-                
+                # echo "here8"
+                #used to bypass error of 0+0
                 if [ $product = 0 ] && [ $dot = 0 ]; then
                     dot=0
                 else
+                    #get the dot product by summing all the products
                     dot=$(expr $dot + $product)
                 fi
-                
+                # echo "here9"
             done
-
-            # product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
-            # product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
-            # echo "product: " $product
-            # dot=$(expr $dot + $product)
-            # echo "dot: " $dot
+            # echo "here10"
             echo -n $dot
-
-            
+            # echo "here11"
             flagTab=1 #print a tab with the next loop
         done
-        # echo "dot: " $dot
         flagTab=0 #reset variable
         echo -n -e "\n" #print newline
     done
-    # echo -n -e "\n" #print newline
-
-
 }
 
 dims2(){ #get dimensions of matrix 1 and 2
