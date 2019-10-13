@@ -24,7 +24,7 @@ dims(){ #get dimensions of given matrix
     done < $mat1
 
     #count cols
-    while read -a entries;
+    while read -a entries
     do 
         cols=${#entries[@]} #equal to the number of numbers in the row
     done < $mat1
@@ -103,10 +103,16 @@ mean(){ #output the rounded mean of each column from the given matrix
         #read the given matrix and sum up the column numbered $elem
         while read -a num2
         do
-        sum=$(expr $sum + ${num2[$elem]})
-        count=$(expr $count + 1)
+            #used to bypass error when adding 0 + 0
+            if [ ${num2[$elem]} = 0 ] && [ $sum = 0 ]; then
+                sum=0
+            else
+                sum=$(expr $sum + ${num2[$elem]}) #add the number to the sum
+            fi
+
+            count=$(expr $count + 1) #increment each read through
         done < $mat1
-        
+
         #rounding formula provided from program desc
         rounding="($sum + ($rows/2)*( ($sum>0)*2-1 )) / $rows"
         mean=$(($rounding))
@@ -144,7 +150,65 @@ add(){
         exit -1
     fi
 
+    # count2=0
+    flagTab=0
+    for j in $(seq 0 1 $(expr $rows1 - 1))
+    do
+        for i in $(seq 1 1 $cols1)
+        do
+            if [ $flagTab = 1 ]; then
+                echo -n -e "\t"
+            fi
 
+            sum2=0
+            matCol1Arr=()
+            matCol2Arr=()
+
+            matCol1=$(cut -f $i < $mat1)
+            matCol2=$(cut -f $i < $mat2)
+
+            for num in $matCol1
+            do
+                matCol1Arr+=( $num )
+            done
+
+            for num in $matCol2
+            do
+                matCol2Arr+=( $num )
+            done
+            # echo "here1"
+            # echo "mat1: " ${matCol1Arr[$j]}
+            # echo "mat2: " ${matCol2Arr[$j]}
+            # echo "here2"
+
+            #used to bypass error when adding 0 + 0
+            if [ ${matCol1Arr[$j]} = 0 ] && [ ${matCol2Arr[$j]} = 0 ]; then
+                # echo "sum: 0"
+                echo -n "0"
+            else
+                sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]})
+                # echo "sum: " $sum
+                echo -n $sum
+            fi
+            
+
+            # echo "here3"
+            flagTab=1
+        done
+        flagTab=0
+        echo -n -e "\n"
+    done
+    # echo -n -e "\n"
+
+
+    # postTrans=() #clear the array
+    # preTrans=$(cut -f $i < $mat1) #put the indexed column into preTrans
+
+    # #directly get numbers from preTrans and put them into postTrans
+    # for num in $preTrans 
+    # do
+    #     postTrans+=( $num )
+    # done
 }
 
 multiply(){
@@ -178,7 +242,7 @@ dims2(){ #get dimensions of matrix 1 and 2
     done < $mat1
 
     #count cols mat1
-    while read -a entries1;
+    while read -a entries1
     do 
         cols1=${#entries1[@]} #equal to the number of numbers in the row
     done < $mat1
@@ -191,7 +255,7 @@ dims2(){ #get dimensions of matrix 1 and 2
     done < $mat2
 
     #count cols mat2
-    while read -a entries2;
+    while read -a entries2
     do 
         cols2=${#entries2[@]} #equal to the number of numbers in the row
     done < $mat2
