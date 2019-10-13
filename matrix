@@ -44,6 +44,7 @@ transpose(){ #tranpose the given matrix
     fi  
 
     dims #get dimensions of given matrix
+    > trans.txt # clear the file
 
     for i in $(seq 1 1 $cols) #loop for the number of columns
     do
@@ -59,14 +60,17 @@ transpose(){ #tranpose the given matrix
         #output the columns horizontally with a tab after each number and a newline at the end
         for j in $(seq 0 1 $(expr $rows - 1)) #loop for each row
         do
-            echo -n -e ${postTrans[$j]} #print the number at the given index
+            # echo -n -e ${postTrans[$j]} #print the number at the given index
+            echo -n -e ${postTrans[$j]} >> trans.txt
 
             if [ $j = $(expr $rows - 1) ]; then #if the increment is the last element
-                echo -e -n "\n" #print a newline
+                # echo -e -n "\n" #print a newline
+                echo -e -n "\n" >> trans.txt
                 break #do not print a tab
             fi
 
-            echo -n -e "\t" #print a tab
+            # echo -n -e "\t" #print a tab
+            echo -n -e "\t" >> trans.txt
         done
     done
 }
@@ -144,6 +148,17 @@ add(){
 
     dims2 #get dimensions of matrix 1 and 2
 
+    > temp3.txt # clear
+    > temp1.txt 
+    > temp2.txt 
+    > temp11.txt
+    > temp22.txt
+    > temp4.txt
+    > temp5.txt
+
+    echo $rows1 $cols1 >> temp11.txt
+    echo $rows2 $cols2 >> temp22.txt
+
     #error if the matrices do not have the same dimensions
     if [ $rows1 != $rows2 ] || [ $cols1 != $cols2 ]; then
         >&2 echo "error: cannot add matrices with differing dimensions" #output error to stderror
@@ -156,12 +171,17 @@ add(){
     #outer loop to determine index of array
     for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
     do
+        echo $j >> temp4.txt
         #inner loop to get numbers from matrices
         #position of number determined by outer loop
         for i in $(seq 1 1 $cols1) #loop for the number of columns
         do
+            echo $i >> temp5.txt
             if [ $flagTab = 1 ]; then #if it is not the first iteration of the inner loop
                 echo -n -e "\t"       #then print a tab
+                echo -n -e "\t" >> temp3.txt #then print a tab
+                echo -n -e "\t" >> temp1.txt #then print a tab
+                echo -n -e "\t" >> temp2.txt #then print a tab
             fi
 
             #reset variables
@@ -183,19 +203,27 @@ add(){
                 matCol2Arr+=( $num )
             done
 
+            echo -n ${matCol1Arr[$j]} >> temp1.txt
+            echo -n ${matCol2Arr[$j]} >> temp2.txt
+
             #used to bypass error when adding 0 + 0
             if [ ${matCol1Arr[$j]} = 0 ] && [ ${matCol2Arr[$j]} = 0 ]; then
                 echo -n "0"
+                echo -n "0" >> temp3.txt
             else
                 #add the two numbers together and print it without a newline
                 sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]}) 
                 echo -n $sum
+                echo -n $sum >> temp3.txt
             fi
             
             flagTab=1 #print a tab with the next loop
         done
         flagTab=0 #reset variable
         echo -n -e "\n" #print newline
+        echo -n -e "\n" >> temp3.txt #print newline
+        echo -n -e "\n" >> temp1.txt #print newline
+        echo -n -e "\n" >> temp2.txt #print newline
     done
 }
 
@@ -219,6 +247,75 @@ multiply(){
         >&2 echo "error: cannot multiply due to incompatible dimensions" #output error to stderror
         exit -1
     fi
+
+    temp=$mat1
+    temp2=$mat2
+    mat1=$mat2
+    mat2=
+    transpose
+    mat2="trans.txt"
+    mat1=$temp
+
+    cat $mat1
+    echo "done!"
+    cat $mat2
+
+    exit 1
+
+    flagTab=0 #flag to print tab
+
+    #get numbers and add them
+    #outer loop to determine index of array
+    for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
+    do
+        #inner loop to get numbers from matrices
+        #position of number determined by outer loop
+        for i in $(seq 1 1 $cols1) #loop for the number of columns
+        do
+            if [ $flagTab = 1 ]; then #if it is not the first iteration of the inner loop
+                # echo -n -e "\t"       #then print a tab
+                pass=1
+            fi
+
+            #reset variables
+            # sum2=0
+            matCol1Arr=()
+            matCol2Arr=()
+            #get numbers from matrices
+            matCol1=$(cut -f $i < $mat1)
+            matCol2=$(cut -f $i < $mat2)
+
+            #directly get numbers from matrix1 and store it in an array
+            for num in $matCol1
+            do
+                matCol1Arr+=( $num )
+            done
+            #directly get numbers from matrix2 and store it in an array
+            for num in $matCol2
+            do
+                matCol2Arr+=( $num )
+            done
+
+
+            #used to bypass error when adding 0 + 0
+            if [ ${matCol1Arr[$j]}=0 ] || [ ${matCol2Arr[$j]}=0 ]; then
+                # echo -n "0"
+                pass=1
+            else
+                #add the two numbers together and print it without a newline
+                # sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]}) 
+                # echo -n $sum
+                pass=1
+            fi
+            
+            flagTab=1 #print a tab with the next loop
+        done
+        flagTab=0 #reset variable
+        # echo -n -e "\n" #print newline
+    done
+
+
+
 }
 
 dims2(){ #get dimensions of matrix 1 and 2
@@ -269,6 +366,7 @@ if [ ${args[0]} = "dims" ]; then
 
 elif [ ${args[0]} = "transpose" ]; then
     transpose
+    cat trans.txt
 
 elif [ ${args[0]} = "mean" ]; then
     mean
