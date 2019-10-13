@@ -262,50 +262,65 @@ multiply(){
     #outer loop to determine index of array
     for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
     do
-        dot=0
         #inner loop to get numbers from matrices
         #position of number determined by outer loop
-        for i in $(seq 1 1 $cols1) #loop for the number of columns
+        for k in $(seq 0 1 $(expr $rows1 - 1))
         do
             if [ $flagTab = 1 ]; then #if it is not the first iteration of the inner loop
-                # echo -n -e "\t"       #then print a tab
-                pass=1
+                echo -n -e "\t"       #then print a tab
             fi
-
-            #reset variables
-            product=0
-            # dot=0
-            matCol1Arr=()
-            matCol2Arr=()
-            #get numbers from matrices
-            matCol1=$(cut -f $i < $mat1)
-            matCol2=$(cut -f $i < $mat2)
-
-            #directly get numbers from matrix1 and store it in an array
-            for num in $matCol1
+            
+            dot=0
+            for i in $(seq 1 1 $cols1)
             do
-                matCol1Arr+=( $num )
-            done
-            #directly get numbers from matrix2 and store it in an array
-            for num in $matCol2
-            do
-                matCol2Arr+=( $num )
+                #reset variables
+                product=0
+                matCol1Arr=()
+                matCol2Arr=()
+                #get numbers from matrices
+                matCol1=$(cut -f $i < $mat1)
+                matCol2=$(cut -f $i < $mat2)
+
+                #directly get numbers from matrix1 and store it in an array
+                for num in $matCol1
+                do
+                    matCol1Arr+=( $num )
+                done
+                #directly get numbers from matrix2 and store it in an array
+                for num in $matCol2
+                do
+                    matCol2Arr+=( $num )
+                done
+
+                if [ ${matCol1Arr[$j]} = 0 ] || [ ${matCol1Arr[$j]} = 0 ]; then
+                    product=0
+                else
+                    product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$k]}) 
+                fi
+                
+                if [ $product = 0 ] && [ $dot = 0 ]; then
+                    dot=0
+                else
+                    dot=$(expr $dot + $product)
+                fi
+                
             done
 
-            # index2=$(expr $i - 1)
-            product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
+            # product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
+            # product=$(expr ${matCol1Arr[$j]} \* ${matCol2Arr[$j]}) 
             # echo "product: " $product
-            dot=$(expr $dot + $product)
+            # dot=$(expr $dot + $product)
             # echo "dot: " $dot
+            echo -n $dot
 
             
             flagTab=1 #print a tab with the next loop
         done
-        echo "dot: " $dot
+        # echo "dot: " $dot
         flagTab=0 #reset variable
-        # echo -n -e "\n" #print newline
+        echo -n -e "\n" #print newline
     done
-
+    # echo -n -e "\n" #print newline
 
 
 }
