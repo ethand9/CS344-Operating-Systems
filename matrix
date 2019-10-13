@@ -150,65 +150,53 @@ add(){
         exit -1
     fi
 
-    # count2=0
-    flagTab=0
-    for j in $(seq 0 1 $(expr $rows1 - 1))
+    flagTab=0 #flag to print tab
+
+    #get numbers and add them
+    #outer loop to determine index of array
+    for j in $(seq 0 1 $(expr $rows1 - 1)) #loop for the number of rows
     do
-        for i in $(seq 1 1 $cols1)
+        #inner loop to get numbers from matrices
+        #position of number determined by outer loop
+        for i in $(seq 1 1 $cols1) #loop for the number of columns
         do
-            if [ $flagTab = 1 ]; then
-                echo -n -e "\t"
+            if [ $flagTab = 1 ]; then #if it is not the first iteration of the inner loop
+                echo -n -e "\t"       #then print a tab
             fi
 
+            #reset variables
             sum2=0
             matCol1Arr=()
             matCol2Arr=()
-
+            #get numbers from matrices
             matCol1=$(cut -f $i < $mat1)
             matCol2=$(cut -f $i < $mat2)
 
+            #directly get numbers from matrix1 and store it in an array
             for num in $matCol1
             do
                 matCol1Arr+=( $num )
             done
-
+            #directly get numbers from matrix2 and store it in an array
             for num in $matCol2
             do
                 matCol2Arr+=( $num )
             done
-            # echo "here1"
-            # echo "mat1: " ${matCol1Arr[$j]}
-            # echo "mat2: " ${matCol2Arr[$j]}
-            # echo "here2"
 
             #used to bypass error when adding 0 + 0
             if [ ${matCol1Arr[$j]} = 0 ] && [ ${matCol2Arr[$j]} = 0 ]; then
-                # echo "sum: 0"
                 echo -n "0"
             else
-                sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]})
-                # echo "sum: " $sum
+                #add the two numbers together and print it without a newline
+                sum=$(expr ${matCol1Arr[$j]} + ${matCol2Arr[$j]}) 
                 echo -n $sum
             fi
             
-
-            # echo "here3"
-            flagTab=1
+            flagTab=1 #print a tab with the next loop
         done
-        flagTab=0
-        echo -n -e "\n"
+        flagTab=0 #reset variable
+        echo -n -e "\n" #print newline
     done
-    # echo -n -e "\n"
-
-
-    # postTrans=() #clear the array
-    # preTrans=$(cut -f $i < $mat1) #put the indexed column into preTrans
-
-    # #directly get numbers from preTrans and put them into postTrans
-    # for num in $preTrans 
-    # do
-    #     postTrans+=( $num )
-    # done
 }
 
 multiply(){
