@@ -4,20 +4,27 @@ import random
 #and create a file with the given name
 #and write to it
 def randString(fileName): 
+    #append 10 random lowercase letters to the string
     string = ""
     for i in range(10):
-        string += (chr(random.randrange(97, 122))) #append a random lowercase letter
+        string += (chr(random.randrange(97, 122))) 
     string += "\n"
-    f = open(fileName, "w")
-    f.write(string)
-    print(string, end ="")
+    #write the string to the given file
+    myFile = open(fileName, "w")
+    myFile.write(string)
+    myFile.close()
+    #print the file contents
+    myFile = open(fileName, "r")
+    print(myFile.read(), end = "")
+    myFile.close()
 
-#create 3 files and write the strings to them
+#create three files with the given names
+#give them random strings and print them
 randString("gibberish1")
 randString("gibberish2")
 randString("gibberish3")
 
-#get 3 random integers from 1 to 42 print them and multiply them
+#create two random integers from 1 to 42 then print and multiply them
 num1 = (random.randrange(1, 42))
 num2 = (random.randrange(1, 42))
 print(num1)
