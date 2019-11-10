@@ -7,7 +7,7 @@ def randString(fileName):
     #append 10 random lowercase letters to the string
     string = ""
     for i in range(10):
-        string += (chr(random.randrange(97, 122))) 
+        string += (chr(random.randrange(97, 123))) 
     string += "\n"
     #write the string to the given file
     myFile = open(fileName, "w")
@@ -25,8 +25,8 @@ randString("gibberish2")
 randString("gibberish3")
 
 #create two random integers from 1 to 42 then print and multiply them
-num1 = (random.randrange(1, 42))
-num2 = (random.randrange(1, 42))
+num1 = (random.randrange(1, 43))
+num2 = (random.randrange(1, 43))
 print(num1)
 print(num2)
 print(num1*num2)
