@@ -1,46 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_INPUT 100
-
-void getInput();
+char* getInput();
 void doExit();
 void doCD();
 void doStatus();
 void doExec();
 
-char userInput[MAX_INPUT];
+//global variables
+
 
 int main(){
     // printf("hello world\n");
     // fflush(stdin);
-    // char* userInput;
-    // userInput = getInput();
-    getInput();
+    char* userInput;
+    userInput = getInput();
     printf("%s%s\n", "output: ", userInput);
     if(strcmp(userInput, "exit\n") == 0){
         doExit();
     }
-    else if(strcmp(userInput, "status\n") == 0){
+    else if(userInput == "cd\n"){
+        doCD();
+    }
+    else if(userInput == "status\n"){
         doStatus();
     }
     else{
-        //check for cd
-        
-        if(userInput[0] == "c"){
-            printf("true!\n");
+        char* token = strtok(userInput, " ");
+        while(token != NULL){ 
+            printf("%s\n", token); 
+            token = strtok(NULL, " "); 
         }
-        else{
-            doExec();
-        }
+        // if(){
+
+        // }
+        // else{
+            // doExec();
+        // }
     }
 }
 
-void getInput(){
-    // static char str[100];
+char* getInput(){
+    static char str[100];
     printf("%s", ": ");
-    fgets(userInput, MAX_INPUT, stdin);
-    // return str;
+    fgets(str, 100, stdin);
+    return str;
 }
 
 //exit
