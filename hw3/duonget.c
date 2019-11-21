@@ -1,31 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char* getInput();
+#define MAX_INPUT 100
+
+void getInput();
 void doExit();
 void doCD();
 void doStatus();
 void doExec();
 
+char userInput[MAX_INPUT];
+
 int main(){
     // printf("hello world\n");
     // fflush(stdin);
-    char* userInput;
-    userInput = getInput();
+    // char* userInput;
+    // userInput = getInput();
+    getInput();
     printf("%s%s\n", "output: ", userInput);
     if(strcmp(userInput, "exit\n") == 0){
         doExit();
     }
-    else if(userInput == "cd\n"){
-        doCD();
-    }
-    else if(userInput == "status\n"){
+    else if(strcmp(userInput, "status\n") == 0){
         doStatus();
     }
     else{
+        //check for cd
         
-        if(){
-
+        if(userInput[0] == "c"){
+            printf("true!\n");
         }
         else{
             doExec();
@@ -33,11 +36,11 @@ int main(){
     }
 }
 
-char* getInput(){
-    static char str[100];
+void getInput(){
+    // static char str[100];
     printf("%s", ": ");
-    fgets(str, 100, stdin);
-    return str;
+    fgets(userInput, MAX_INPUT, stdin);
+    // return str;
 }
 
 //exit
