@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#define MAX_ARRAY_SIZE 100
+#define MAX_SIZE 100
 
 void getInput();
 void doExit();
@@ -17,30 +17,33 @@ void doExec();
 void test1();
 
 //global variables
-// char userInput[MAX_ARRAY_SIZE];
-// char* arguments[MAX_ARRAY_SIZE];
+char userInput[MAX_SIZE];
+char* arguments[MAX_SIZE];
+char dirName[MAX_SIZE];
 
 int main(){
-    char userInput[MAX_ARRAY_SIZE];
-    char* arguments[MAX_ARRAY_SIZE];
+    // char userInput[MAX_SIZE];
+    // char* arguments[MAX_SIZE];
     int counter = 0;
     int i;
+    char* p;
 
     // printf("hello world\n");
     // fflush(stdin);
     // char* userInput;
     // userInput = getInput();
 
-    // getInput();
+    getInput();
     // printf("%s%s\n", "output: ", userInput);
     // fflush(stdout);
+    // printf(userInput[1]);
 
 
     // test1();
 
-    printf("%s", ": ");
-    fflush(stdout);
-    fgets(userInput, MAX_ARRAY_SIZE, stdin);
+    // printf("%s", ": ");
+    // fflush(stdout);
+    // fgets(userInput, MAX_SIZE, stdin);
 
 
     // arguments[0] = "hello";
@@ -58,25 +61,59 @@ int main(){
     }
     else{
         char* token; 
-        token = strtok(userInput, " ");
+        token = strtok(userInput, " \n");
         while(token != NULL){ 
-            printf("%s\n", token); 
+            // printf("%s\n", token); 
             fflush(stdout);
-            // arguments[counter] = token;
+            arguments[counter] = token;
+            // printf("%s%s\n", "args: ", arguments[counter]);
             
-            if(strcmp(token, "cd") == 0){
-                doCD();
+            // if(strcmp(token, "cd") == 0){
+            //     doCD();
+            // }
+
+            
+
+            // printf("here1\n");
+            
+            p = token;
+            if(*p == '#'){
+                printf("true!\n");
             }
+            // printf("%s%s\n", "p: ", p);
+
+            // for(p = token; *p; ++p){
+            //     // printf("here2\n");
+            //     // printf("%s\n", *p);
+            //     if(*p == '#'){
+            //         printf("true!\n");
+            //     }
+            // }
 
             token = strtok(NULL, " \n"); 
             counter++;
+        }
+        if(strcmp(arguments[0], "cd") == 0){
+            // printf("true!\n");
+            if(arguments[1] == NULL){
+                // printf("none!\n");
+                chdir(getenv("HOME"));
+                getcwd(dirName, sizeof(dirName));
+                printf("Current working dir: %s\n", dirName);
+            }
+            else if( (arguments[2] == NULL) && (!(arguments[1] == NULL)) ){
+                doCD();
+            }
+            else{
+                printf("error\n");
+            }
         }
 
         // if(){
 
         // }
         // else{
-            doExec();
+            // doExec();
         // }
     }
 
@@ -87,9 +124,9 @@ int main(){
 
 void getInput(){
     // static char str[100];
-    // printf("%s", ": ");
-    // fflush(stdout);
-    // fgets(userInput, MAX_ARRAY_SIZE, stdin);
+    printf("%s", ": ");
+    fflush(stdout);
+    fgets(userInput, MAX_SIZE, stdin);
     // fgets(str, 100, stdin);
     // return str;
 }
@@ -102,7 +139,18 @@ void doExit(){
 
 //cd
 void doCD(){
-    printf("cd\n");
+    
+    // printf("inside cd\n");
+    chdir(arguments[1]);
+    getcwd(dirName, sizeof(dirName));
+    printf("Current working dir: %s\n", dirName);
+
+    // getcwd(dirName, sizeof(dirName));
+    // printf("Current working dir: %s\n", dirName);
+
+    // chdir(getenv("HOME"));
+    // getcwd(dirName, sizeof(dirName));
+    // printf("Current working dir: %s\n", dirName);
 }
 
 //status
@@ -116,5 +164,6 @@ void doExec(){
 }
 
 void test1(){
-    printf("here1\n");
+    printf("here10\n");
+
 }
