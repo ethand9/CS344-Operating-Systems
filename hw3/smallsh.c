@@ -22,107 +22,127 @@ char* arguments[MAX_SIZE];
 char dirName[MAX_SIZE];
 
 int main(){
-    // char userInput[MAX_SIZE];
-    // char* arguments[MAX_SIZE];
-    int counter = 0;
-    int i;
-    char* p;
+    // int counter = 0;
+    int i, counter, status, comment, inputR, outputR, last, background;
+    char* first, outputFile, inputFile;
 
-    // printf("hello world\n");
-    // fflush(stdin);
-    // char* userInput;
-    // userInput = getInput();
+    while(1 == 1){
+        //reset values and clear the arguments
+        counter = 0;
+        comment = 0;
+        inputR = -1;
+        outputR = -1;
+        background = 0;
+        for(i = 0; i < MAX_SIZE; i++)
+            arguments[i] == NULL;
 
-    getInput();
-    // printf("%s%s\n", "output: ", userInput);
-    // fflush(stdout);
-    // printf(userInput[1]);
+        getInput(); //get input from user
 
-
-    // test1();
-
-    // printf("%s", ": ");
-    // fflush(stdout);
-    // fgets(userInput, MAX_SIZE, stdin);
-
-
-    // arguments[0] = "hello";
-    // printf("%s\n", arguments[0]);
-
-
-    if(strcmp(userInput, "exit\n") == 0){
-        doExit();
-    }
-    // else if(userInput == "cd\n"){
-    //     doCD();
-    // }
-    else if(strcmp(userInput, "status\n") == 0){
-        doStatus();
-    }
-    else{
-        char* token; 
-        token = strtok(userInput, " \n");
-        while(token != NULL){ 
-            // printf("%s\n", token); 
-            fflush(stdout);
-            arguments[counter] = token;
-            // printf("%s%s\n", "args: ", arguments[counter]);
-            
-            // if(strcmp(token, "cd") == 0){
-            //     doCD();
-            // }
-
-            
-
-            // printf("here1\n");
-            
-            p = token;
-            if(*p == '#'){
-                printf("true!\n");
-            }
-            // printf("%s%s\n", "p: ", p);
-
-            // for(p = token; *p; ++p){
-            //     // printf("here2\n");
-            //     // printf("%s\n", *p);
-            //     if(*p == '#'){
-            //         printf("true!\n");
-            //     }
-            // }
-
-            token = strtok(NULL, " \n"); 
-            counter++;
+        if(strcmp(userInput, "exit\n") == 0){ //check for exit command
+            doExit();
         }
-        if(strcmp(arguments[0], "cd") == 0){
-            // printf("true!\n");
-            if(arguments[1] == NULL){
-                // printf("none!\n");
-                chdir(getenv("HOME"));
-                getcwd(dirName, sizeof(dirName));
-                printf("Current working dir: %s\n", dirName);
+        else if(strcmp(userInput, "status\n") == 0){ //check for status command
+            doStatus();
+        }
+        else{
+            char* token; 
+            token = strtok(userInput, " \n");
+            //check to see if input is a comment
+            first = token;
+            if(*first == '#')
+                    comment = 1;
+            //get all arguments from user and store it in an array
+            while(token != NULL){ 
+                // printf("%s\n", token); 
+                fflush(stdout);
+                arguments[counter] = token;
+                // printf("%s%s\n", "arguments: ", arguments[counter]);
+                
+                // p = token;
+                // if(*p == '#'){
+                //     comment = 1;
+                // }
+
+                // printf("%s%s\n", "p: ", p);
+
+                // for(p = token; *p; ++p){
+                //     // printf("here2\n");
+                //     // printf("%s\n", *p);
+                //     if(*p == '#'){
+                //         printf("true!\n");
+                //     }
+                // }
+
+                token = strtok(NULL, " \n"); 
+                counter++;
             }
-            else if( (arguments[2] == NULL) && (!(arguments[1] == NULL)) ){
-                doCD();
+
+            if(strcmp(arguments[counter - 1], "&") == 0){
+                printf("background!\n");
+                background = 1;
             }
+
+            for(i = 0; i < counter; i++){
+                // printf("%s%s\n", "arguments: ", arguments[i]);
+                if(strcmp(arguments[i], "<") == 0){
+                    printf("input!\n");
+                    inputR = i + 1;
+                }
+                else if(strcmp(arguments[i], ">") == 0){
+                    printf("output!\n");
+                    outputR = i + 1;
+                }
+            }
+
+            if(comment == 1){
+                ; //pass
+            }
+            else if(strcmp(arguments[0], "cd") == 0){ //check for cd command
+                if(arguments[1] == NULL){ //if no given directory
+                    chdir(getenv("HOME"));
+                    getcwd(dirName, sizeof(dirName));
+                    printf("Current working dir: %s\n", dirName);
+                    fflush(stdout);
+                }
+                else if((arguments[2] == NULL) && (!(arguments[1] == NULL))) //if there are only two arguments
+                    doCD();
+                else{ //more than two arguments
+                    printf("error: too many arguments\n");
+                    fflush(stdout);
+                }
+            }
+            // else if( (strcmp(arguments[0], "status") == 0) && (arguments[1] == NULL))
+            //     doExec();
             else{
-                printf("error\n");
+                //check for input
+                if(inputR != -1){
+                    // printf("inside input\n");
+                    printf("%s%s\n", "input file: ", arguments[inputR]);
+                    // inputFile = arguments[inputR];
+                }
+                //check for output
+                if(outputR != -1){
+                    // printf("inside output\n");
+                    printf("%s%s\n", "output file: ", arguments[outputR]);
+                    // outputFile = arguments[outputR];
+                }
+                //check for background
+                if(background == 1){
+                    printf("inside background\n");
+                }
+
+                printf("invalid command\n");
+                fflush(stdout);
             }
+
         }
 
-        // if(){
-
-        // }
-        // else{
-            // doExec();
-        // }
+        
     }
-
-    // for(i = 0; i < counter; i++){
-    //     printf("%s%s\n", "arguments: ", arguments[i]);
-    // }
 }
 
-void getInput(){
+//get input from the user
+void getInput(){ 
     // static char str[100];
     printf("%s", ": ");
     fflush(stdout);
@@ -137,13 +157,13 @@ void doExit(){
     exit(0);
 }
 
-//cd
+//change to the given directory
 void doCD(){
-    
     // printf("inside cd\n");
     chdir(arguments[1]);
     getcwd(dirName, sizeof(dirName));
     printf("Current working dir: %s\n", dirName);
+    fflush(stdout);
 
     // getcwd(dirName, sizeof(dirName));
     // printf("Current working dir: %s\n", dirName);
@@ -155,12 +175,12 @@ void doCD(){
 
 //status
 void doStatus(){
-    printf("status\n");
+    printf("inside status\n");
 }
 
 //exec
 void doExec(){
-    printf("exec\n");
+    printf("inside exec\n");
 }
 
 void test1(){
