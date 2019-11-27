@@ -25,9 +25,11 @@ char dirName[MAX_INPUT];
 
 int main(){
     // int counter = 0;
-    int i, counter, counter2, comment, inputR, outputR, last, background, cpid, tmpvar1, tmpvar2;
+    int i, counter, counter2, comment, inputR, outputR, last, background, 
+    cpid, tmpvar1, tmpvar2, ioNum;
     char* first;
     char* tmpChar;
+    char* tmpChar2;
     char *p;
     pid_t spawnPid = -5;
     pid_t actualPid = -5;
@@ -46,6 +48,7 @@ int main(){
         outputR = -1;
         background = 0;
         fileIn = -1;
+        ioNum = 0;
         
         for(i = 0; i < MAX_INPUT; i++)
             arguments[i] = NULL;
@@ -74,10 +77,32 @@ int main(){
             while(token != NULL){ 
                 // printf("%s\n", token); 
                 // fflush(stdout);
-                arguments[counter] = token;
+                // arguments[counter] = token;
 
                 // change so if it detects < or > then not add
-
+                tmpChar2 = token;
+                // if((*tmpChar2 == '<') || (*tmpChar2 == '>')){
+                    // printf("here10\n");
+                    // ioNum = 1;
+                // }
+                if(*tmpChar2 == '<'){
+                    // printf("here<\n");
+                    // *tmpChar = '0';
+                    ; //pass
+                }
+                else if(*tmpChar2 == '>'){
+                    // printf("here>\n");
+                    // ; //pass
+                    ioNum = 1;
+                }
+                else if(ioNum == 1){
+                    ioNum = 0;
+                }
+                else{
+                    arguments[counter] = token;
+                    counter++;
+                }
+                token = strtok(NULL, " \n"); 
 
                 // printf("%s%s\n", "arguments: ", arguments[counter]);
                 
@@ -101,13 +126,14 @@ int main(){
                 //     }
                 // }
 
-                token = strtok(NULL, " \n"); 
-                counter++;
+                // token = strtok(NULL, " \n"); 
+                // counter++;
             }
 
-            for(i = 0; i < counter; i++){
-                printf("%s%i%s%s\n", "argument", i+1, ": ", arguments[i]);
-            }
+            // //print arguments
+            // for(i = 0; i < counter; i++){
+            //     printf("%s%i%s%s\n", "argument", i+1, ": ", arguments[i]);
+            // }
 
 
 
@@ -115,7 +141,7 @@ int main(){
 
 
             if(strcmp(arguments[counter - 1], "&") == 0){
-                printf("background!\n");
+                // printf("background!\n");
                 background = 1;
             }
 
@@ -159,6 +185,7 @@ int main(){
                 }
                 else{ //more than two arguments
                     printf("error: too many arguments\n");
+                    // perror("error: too many arguments\n");
                     fflush(stdout);
                 }
             }
@@ -251,6 +278,7 @@ int main(){
                         
                         // perror("Invalid command\n");
                         printf("%s%s\n", arguments[0], ": command not found");
+                        // perror("%s%s\n", arguments[0], ": command not found");
                         fflush(stdout);
                         exit(1);
                         break;
@@ -350,3 +378,4 @@ void test1(){
 //how to grading script
 //kill processes
 //input / output
+// ctrl c and z with signals?
