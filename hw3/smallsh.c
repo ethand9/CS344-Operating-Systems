@@ -25,8 +25,10 @@ char dirName[MAX_INPUT];
 
 int main(){
     // int counter = 0;
-    int i, counter, comment, inputR, outputR, last, background, cpid, tmpvar1, tmpvar2;
+    int i, counter, counter2, comment, inputR, outputR, last, background, cpid, tmpvar1, tmpvar2;
     char* first;
+    char* tmpChar;
+    char *p;
     pid_t spawnPid = -5;
     pid_t actualPid = -5;
     int ten = 10;
@@ -38,6 +40,7 @@ int main(){
     while(1 == 1){
         //reset values and clear the arguments
         counter = 0;
+        counter2 = 0;
         comment = 0;
         inputR = -1;
         outputR = -1;
@@ -70,7 +73,7 @@ int main(){
             //get all arguments from user and store it in an array
             while(token != NULL){ 
                 // printf("%s\n", token); 
-                fflush(stdout);
+                // fflush(stdout);
                 arguments[counter] = token;
 
                 // change so if it detects < or > then not add
@@ -78,24 +81,38 @@ int main(){
 
                 // printf("%s%s\n", "arguments: ", arguments[counter]);
                 
-                // p = token;
-                // if(*p == '#'){
-                //     comment = 1;
+                // tmpChar = token;
+                // if(*tmpChar == '$'){
+                //     printf("true!\n");
+                //     *tmpChar = '0';
                 // }
 
                 // printf("%s%s\n", "p: ", p);
 
-                // for(p = token; *p; ++p){
+                // for(tmpChar = token; *tmpChar; ++tmpChar){
                 //     // printf("here2\n");
-                //     // printf("%s\n", *p);
-                //     if(*p == '#'){
-                //         printf("true!\n");
+                //     // printf("%s\n", *tmpChar);
+                //     if(*tmpChar == '$'){
+                //         *tmpChar = 'z';
+                //         counter2++;
+                //         if(counter2 == 2){
+
+                //         }
                 //     }
                 // }
 
                 token = strtok(NULL, " \n"); 
                 counter++;
             }
+
+            for(i = 0; i < counter; i++){
+                printf("%s%i%s%s\n", "argument", i+1, ": ", arguments[i]);
+            }
+
+
+
+
+
 
             if(strcmp(arguments[counter - 1], "&") == 0){
                 printf("background!\n");
@@ -326,5 +343,10 @@ void test1(){
 }
 
 
-//todo:
-//status and pid
+
+//questions: 
+//how to do $$
+//background
+//how to grading script
+//kill processes
+//input / output
