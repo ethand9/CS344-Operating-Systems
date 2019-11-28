@@ -26,11 +26,12 @@ char dirName[MAX_INPUT];
 // char inputFile[MAX_INPUT];
 // char outputFile[MAX_INPUT];
 char tmpPid[MAX_SIZE];
+// int bgpidArr[MAX_SIZE];
 
 int main(){
     // int counter = 0;
     int i, j, counter, counter2, comment, inputR, outputR, last, background, 
-    cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum;
+    cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum, length, bgPid;
     char *first, *tmpChar, *tmpChar2, *p, *inputFile, *outputFile;
     // char *tmpChar;
     // char* tmpChar2;
@@ -39,12 +40,15 @@ int main(){
     // char* outputFile;
     pid_t spawnPid = -5;
     pid_t actualPid = -5;
+    pid_t childPid = -5;
     int ten = 10;
     int statusNum = 0;
     int termSig = -5;
     int fileIn = -1;
+    int bgCounter = 0;
     int shellPid = getpid();
-    printf("%s%i\n", "shellPid: ", shellPid);
+    sprintf(tmpPid, "%i", shellPid);
+    // printf("%s%i\n", "shellPid: ", shellPid);
 
     // printf("here1!\n");
 
@@ -63,22 +67,37 @@ int main(){
         oNum - 0;
         inputFile = NULL;
         outputFile = NULL;
+        
 
         for(i = 0; i < MAX_ARGS; i++)
             arguments[i] = NULL;
 
         getInput(); //get input from user
         // printf("%s%s\n", "input: ", userInput);
+        // length = strlen(tmpPid);
         for(i = 0; i < strlen(userInput); i++){
             if((userInput[i] == '$') && (userInput[i+1] == '$')){
                 // how to get pid of parent
                 // printf("here103\n");
-                sprintf(tmpPid, "%i", shellPid);
+                // sprintf(tmpPid, "%i", shellPid);
                 // printf("%i\n", tmpPid);
 
-                for(j = 0; j < strlen(tmpPid); j++){
-                    userInput[i+j] = tmpPid[j];
-                }
+                userInput[i] = '\0';
+                userInput[i+1] = '\0';
+                strncat(userInput, tmpPid, strlen(tmpPid));
+
+                // printf("here20!\n");
+
+                // printf("%s%s\n", "tmpPid: ", tmpPid);
+
+                // // printf("%s%i\n", "length: ", length);
+                // for(j = 0; j < strlen(tmpPid); j++){
+                //     userInput[i+j] = tmpPid[j];
+                // }
+
+
+
+                // tmpPid = "";
                 // printf("%s%s\n", "input: ", userInput);
             }
         }
@@ -205,11 +224,13 @@ int main(){
                 ; //pass
             }
             else if((strcmp(arguments[0], "exit") == 0) && (background == 1) && 
-            (strcmp(arguments[1], "&") == 0) && (arguments[2] == NULL)){
+            (arguments[1] == NULL)){
+            // (strcmp(arguments[1], "&") == 0) && (arguments[2] == NULL)){
                 doExit();
             }
-            else if((strcmp(arguments[0], "status") == 0) && (background == 1) && 
-            (strcmp(arguments[1], "&") == 0) && (arguments[2] == NULL)){
+            else if((strcmp(arguments[0], "status") == 0) && (background == 1) &&
+            (arguments[1] == NULL)){ 
+            // (strcmp(arguments[1], "&") == 0) && (arguments[2] == NULL)){
                 doStatus(termSig, statusNum);
             }
             else if(strcmp(arguments[0], "cd") == 0){ //check for cd command
@@ -348,6 +369,14 @@ int main(){
                         if(background != 1){
                             actualPid = waitpid(spawnPid, &statusNum, 0);
                         }
+                        else{
+                            printf("%s%i\n", "background pid is ", spawnPid);
+                            // bgpidArr[bgCounter] = spawnPid;
+                            // bgCounter++;
+                            // for(i = 0; i < bgCounter; i++){
+                            //     printf("%s%i\n", "bgpidArr: ", bgpidArr[i]);
+                            // }
+                        }
 
 
                         // printf("%s%d\n", "parent: ", getpid());
@@ -360,6 +389,19 @@ int main(){
             }
 
         }
+
+        //check for bg processes
+        // for(i = 0; i < bgCounter; i++){
+        //     childPid = waitpid(childPid , &status, WNOHANG);
+        // }
+        do{
+            childPid = waitpid(-1, &statusNum, WNOHANG);
+            if(childPid > 0){
+                printf("%s%i%s", "background pid ", childPid, " is done: ");
+                doStatus(termSig, statusNum);
+            }
+        }while(childPid > 0);
+
 
         // cpid = waitpid(-1, &statusNum, WNOHANG); //Check if any process has completed; Returns 0 if no terminated processes
         // while(cpid > 0){
