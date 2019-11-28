@@ -29,7 +29,7 @@ char tmpPid[MAX_SIZE];
 
 int main(){
     // int counter = 0;
-    int i, counter, counter2, comment, inputR, outputR, last, background, 
+    int i, j, counter, counter2, comment, inputR, outputR, last, background, 
     cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum;
     char *first, *tmpChar, *tmpChar2, *p, *inputFile, *outputFile;
     // char *tmpChar;
@@ -44,6 +44,7 @@ int main(){
     int termSig = -5;
     int fileIn = -1;
     int shellPid = getpid();
+    printf("%s%i\n", "shellPid: ", shellPid);
 
     // printf("here1!\n");
 
@@ -71,9 +72,14 @@ int main(){
         for(i = 0; i < strlen(userInput); i++){
             if((userInput[i] == '$') && (userInput[i+1] == '$')){
                 // how to get pid of parent
-                printf("here103\n");
+                // printf("here103\n");
                 sprintf(tmpPid, "%i", shellPid);
-                printf("%i\n", tmpPid);
+                // printf("%i\n", tmpPid);
+
+                for(j = 0; j < strlen(tmpPid); j++){
+                    userInput[i+j] = tmpPid[j];
+                }
+                // printf("%s%s\n", "input: ", userInput);
             }
         }
         // if(userInput[])
