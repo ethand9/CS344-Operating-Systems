@@ -18,6 +18,11 @@ void doCD();
 void doStatus(int termSig, int statusNum);
 void doExec();
 void test1();
+void ctrlC(int signalNum1);
+void ctrlZ(int signalNum2);
+
+void catchSIGINT(int signo);
+void catchSigStop(int signal);
 
 //global variables
 char userInput[MAX_INPUT];
@@ -27,12 +32,15 @@ char dirName[MAX_INPUT];
 // char outputFile[MAX_INPUT];
 char tmpPid[MAX_SIZE];
 // int bgpidArr[MAX_SIZE];
+int fgMode = 0;
 
 int main(){
     // int counter = 0;
-    int i, j, counter, counter2, comment, inputR, outputR, last, background, 
-    cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum, length, bgPid;
+    int i, j, counter, counter2, comment, inputR, outputR, last, backgroundAction, 
+    cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum, length, bgPid, background;
     char *first, *tmpChar, *tmpChar2, *p, *inputFile, *outputFile;
+    struct sigaction cAction = {0};
+    struct sigaction zAction = {0};
     // char *tmpChar;
     // char* tmpChar2;
     // char* p;
@@ -45,7 +53,41 @@ int main(){
     int statusNum = 0;
     int termSig = -5;
     int fileIn = -1;
+    int bgRed = -5;
     int bgCounter = 0;
+    
+
+    // cAction.sa_handler = ctrlC;
+
+    // cAction.sa_handler = SIG_IGN;
+
+    // sigfillset(&cAction.sa_mask);
+    // cAction.sa_flags= 0;
+    
+
+    zAction.sa_handler = ctrlZ;
+    sigfillset(&zAction.sa_mask);
+    zAction.sa_flags= 0;
+
+    // sigaction(SIGINT, &cAction, NULL);
+    sigaction(SIGTSTP, &zAction, NULL);
+
+
+    // struct sigaction action = {0};
+    // struct sigaction action2 = {0};
+    // action.sa_handler = SIG_IGN;            //Set up actions and handlers for ctrl+z and ctrl+c functionality
+    // action.sa_flags = 0;                    //Taken from lecture
+    // sigfillset(&(action.sa_mask));
+    // sigaction(SIGINT, &action, NULL);
+    
+    // action2.sa_handler = catchSigStop;
+    // action2.sa_flags = 0;
+    // sigfillset(&(action2.sa_mask));
+    // sigaction(SIGTSTP, &action2, NULL);
+
+
+
+
     int shellPid = getpid();
     sprintf(tmpPid, "%i", shellPid);
     // printf("%s%i\n", "shellPid: ", shellPid);
@@ -60,8 +102,10 @@ int main(){
         comment = 0;
         inputR = -1;
         outputR = -1;
+        backgroundAction = 0;
         background = 0;
         fileIn = -1;
+        bgRed = -5;
         ioNum = 0;
         iNum = 0;
         oNum - 0;
@@ -202,10 +246,14 @@ int main(){
 
 
             if(strcmp(arguments[counter - 1], "&") == 0){
-                // printf("background!\n");
-                background = 1;
                 arguments[counter - 1] = NULL;
                 counter--;
+                background = 1;
+                backgroundAction = 1;
+
+                if(fgMode == 1){
+                    backgroundAction = 0;
+                }
             }
 
             for(i = 0; i < counter; i++){
@@ -319,9 +367,10 @@ int main(){
                             tmpvar1 = open(inputFile, O_RDONLY);
                             if(tmpvar1 == -1){
                             // printf("smallsh: cannot open %s for input\n", arguments[inputR]);
-                            printf("smallsh: cannot open %s for input\n", inputFile);
+                            // printf("smallsh: cannot open %s for input\n", inputFile);
+                            printf("%s%s\n", "error: cannot open ", inputFile);
                             fflush(stdout);
-                            _Exit(1);
+                            exit(1);
                         }
                         //expand this
                         dupNum = dup2(tmpvar1, 0);
@@ -340,7 +389,8 @@ int main(){
                             tmpvar2 = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0744);
                             if(tmpvar2 == -1){
                             // printf("smallsh: cannot open %s\n", arguments[outputR]);
-                            printf("smallsh: cannot open %s\n", outputFile);
+                            // printf("smallsh: cannot open %s\n", outputFile);
+                            printf("%s%s\n", "error: cannot open ", outputFile);
                             fflush(stdout);
                             exit(1);
                         }
@@ -355,6 +405,15 @@ int main(){
                         close(tmpvar2);
                         }
                         // printf("%s%d\n", "child: ", getpid());
+                        // if(background != 1){
+                        //     execvp(arguments[0], arguments);
+                        //     // perror("Invalid command\n");
+                        //     printf("%s%s\n", arguments[0], ": command not found");
+                        //     // perror("%s%s\n", arguments[0], ": command not found");
+                        //     fflush(stdout);
+                        //     exit(1);
+                        // }
+                        
                         execvp(arguments[0], arguments);
                         
                         // perror("Invalid command\n");
@@ -366,7 +425,7 @@ int main(){
                     default:
                         //if background dont wait
                         //put spawnpid into bg array
-                        if(background != 1){
+                        if(backgroundAction == 0){
                             actualPid = waitpid(spawnPid, &statusNum, 0);
                         }
                         else{
@@ -478,6 +537,57 @@ void test1(){
     printf("here10\n");
 
 }
+
+void ctrlC(int signalNum1){
+    // char* message = "Caught SIGINT, sleeping for 5 seconds\n";
+    // write(STDOUT_FILENO, message, 38);
+    // fflush(stdout);
+    // exit(0);
+    // raise(SIGINT);
+    // ; //pass
+}
+
+void ctrlZ(int signalNum2){
+    int i;
+    userInput[0] = '\n';
+    arguments[0] = NULL;
+    for(i = 1; i < MAX_ARGS; i++){
+        arguments[i] = NULL;
+        userInput[i] = '\0';
+    }
+        // userInput[0] = '\n';
+        // userInput[1] = '\0';
+        // memset(userInput, 0, MAX_INPUT);
+
+    char* message;
+    if(fgMode == 0){
+        message = "Entering foreground-only mode (& is now ignored)\n";
+        write(STDOUT_FILENO, message, 49);
+        fflush(stdout);
+        fgMode = 1;
+    }
+    else{
+        message = "Exiting foreground-only mode\n";
+        write(STDOUT_FILENO, message, 29);
+        fflush(stdout);
+        fgMode = 0;
+    }
+    
+    // exit(0);
+    // ; //pass
+}
+
+
+// void catchSIGINT(int signo){                //Code to catch and display message for signals
+// 	char* message = "\nCaught SIGINT.\n";
+// 	write(STDOUT_FILENO, message, 38);
+// }
+
+// void catchSigStop(int signal){
+// 	char* message = "\nCaught SIGTSTP.\n";
+// 	write(STDOUT_FILENO, message, 25);
+// 	// exit(0);
+// }
 
 
 
