@@ -10,6 +10,7 @@
 
 #define MAX_INPUT 2048
 #define MAX_ARGS 512
+#define MAX_SIZE 100
 
 void getInput();
 void doExit();
@@ -20,23 +21,31 @@ void test1();
 
 //global variables
 char userInput[MAX_INPUT];
-char* arguments[MAX_INPUT];
+char* arguments[MAX_ARGS];
 char dirName[MAX_INPUT];
+// char inputFile[MAX_INPUT];
+// char outputFile[MAX_INPUT];
+char tmpPid[MAX_SIZE];
 
 int main(){
     // int counter = 0;
     int i, counter, counter2, comment, inputR, outputR, last, background, 
-    cpid, tmpvar1, tmpvar2, ioNum;
-    char* first;
-    char* tmpChar;
-    char* tmpChar2;
-    char *p;
+    cpid, tmpvar1, tmpvar2, ioNum, iNum, oNum, dupNum;
+    char *first, *tmpChar, *tmpChar2, *p, *inputFile, *outputFile;
+    // char *tmpChar;
+    // char* tmpChar2;
+    // char* p;
+    // char *inputFile, *outputFile; //, *outputFile;
+    // char* outputFile;
     pid_t spawnPid = -5;
     pid_t actualPid = -5;
     int ten = 10;
     int statusNum = 0;
     int termSig = -5;
     int fileIn = -1;
+    int shellPid = getpid();
+
+    // printf("here1!\n");
 
     //loop for getting input
     while(1 == 1){
@@ -49,12 +58,26 @@ int main(){
         background = 0;
         fileIn = -1;
         ioNum = 0;
-        
-        for(i = 0; i < MAX_INPUT; i++)
+        iNum = 0;
+        oNum - 0;
+        inputFile = NULL;
+        outputFile = NULL;
+
+        for(i = 0; i < MAX_ARGS; i++)
             arguments[i] = NULL;
 
         getInput(); //get input from user
         // printf("%s%s\n", "input: ", userInput);
+        for(i = 0; i < strlen(userInput); i++){
+            if((userInput[i] == '$') && (userInput[i+1] == '$')){
+                // how to get pid of parent
+                printf("here103\n");
+                sprintf(tmpPid, "%i", shellPid);
+                printf("%i\n", tmpPid);
+            }
+        }
+        // if(userInput[])
+        
 
         if(strcmp(userInput, "exit\n") == 0){ //check for exit command
             doExit();
@@ -88,15 +111,25 @@ int main(){
                 if(*tmpChar2 == '<'){
                     // printf("here<\n");
                     // *tmpChar = '0';
-                    ; //pass
+                    // ; //pass
+                    iNum = 1;
                 }
                 else if(*tmpChar2 == '>'){
                     // printf("here>\n");
                     // ; //pass
-                    ioNum = 1;
+                    // ioNum = 1;
+                    oNum = 1;
                 }
-                else if(ioNum == 1){
-                    ioNum = 0;
+                // else if(ioNum == 1){
+                //     ioNum = 0;
+                // }
+                else if(iNum == 1){ // make sure this cannot happen twice
+                    inputFile = token;
+                    iNum = 0;
+                }
+                else if(oNum == 1){
+                    outputFile = token;
+                    oNum = 0;
                 }
                 else{
                     arguments[counter] = token;
@@ -113,6 +146,9 @@ int main(){
                 // }
 
                 // printf("%s%s\n", "p: ", p);
+
+
+                //sprintf 
 
                 // for(tmpChar = token; *tmpChar; ++tmpChar){
                 //     // printf("here2\n");
@@ -143,6 +179,8 @@ int main(){
             if(strcmp(arguments[counter - 1], "&") == 0){
                 // printf("background!\n");
                 background = 1;
+                arguments[counter - 1] = NULL;
+                counter--;
             }
 
             for(i = 0; i < counter; i++){
@@ -206,7 +244,8 @@ int main(){
                 }
                 //check for background
                 if(background == 1){
-                    printf("inside background\n");
+                    ; //pass
+                    // printf("inside background\n");
                     // fileIn = open("/dev/null", O_RDONLY); //Redirect to null device to ignore information
                     // if(fileIn == -1){
                     //     perror("open");
@@ -247,29 +286,44 @@ int main(){
                         exit(1);
                         break;
                     case 0:
-                        if(inputR != -1){
-                            tmpvar1 = open(arguments[inputR], O_RDONLY);
+                        // if(inputR != -1){
+                        if(inputFile != NULL){
+                            // tmpvar1 = open(arguments[inputR], O_RDONLY);
+                            tmpvar1 = open(inputFile, O_RDONLY);
                             if(tmpvar1 == -1){
-                            printf("smallsh: cannot open %s for input\n", arguments[inputR]);
+                            // printf("smallsh: cannot open %s for input\n", arguments[inputR]);
+                            printf("smallsh: cannot open %s for input\n", inputFile);
                             fflush(stdout);
                             _Exit(1);
                         }
-                        if(dup2(tmpvar1, 0) == -1){
-                            perror("dup2");
-                            _Exit(1);
-                        }
-                        close(tmpvar1);      //Need to close since it was opened
-                        }
-                        if(outputR != -1){
-                            tmpvar2 = open(arguments[outputR], O_WRONLY | O_CREAT | O_TRUNC, 0744);
-                            if(tmpvar2 == -1) {
-                            printf("smallsh: cannot open %s\n", arguments[outputR]);
+                        //expand this
+                        dupNum = dup2(tmpvar1, 0);
+                        // if(dup2(tmpvar1, 0) == -1){
+                        if(dupNum == -1){
+                            // perror("dup2");
+                            printf("error: dup2");
                             fflush(stdout);
-                            _Exit(1);
+                            exit(1);
                         }
-                        if(dup2(tmpvar2, 1) == -1){
-                            perror("dup2");
-                            _Exit(1);
+                        close(tmpvar1);
+                        }
+                        // if(outputR != -1){
+                        if(outputFile != NULL){
+                            // tmpvar2 = open(arguments[outputR], O_WRONLY | O_CREAT | O_TRUNC, 0744);
+                            tmpvar2 = open(outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0744);
+                            if(tmpvar2 == -1){
+                            // printf("smallsh: cannot open %s\n", arguments[outputR]);
+                            printf("smallsh: cannot open %s\n", outputFile);
+                            fflush(stdout);
+                            exit(1);
+                        }
+                        dupNum = dup2(tmpvar2, 1);
+                        // if(dup2(tmpvar2, 1) == -1){
+                        if(dupNum == -1){
+                            // perror("dup2");
+                            printf("error: dup2");
+                            fflush(stdout);
+                            exit(1);
                         }
                         close(tmpvar2);
                         }
@@ -283,9 +337,16 @@ int main(){
                         exit(1);
                         break;
                     default:
+                        //if background dont wait
+                        //put spawnpid into bg array
+                        if(background != 1){
+                            actualPid = waitpid(spawnPid, &statusNum, 0);
+                        }
+
+
                         // printf("%s%d\n", "parent: ", getpid());
                         // printf("PARENT(%d): Wait()ingfor child(%d) to terminate\n", getpid(), spawnPid);
-                        actualPid = waitpid(spawnPid, &statusNum, 0);
+                        // actualPid = waitpid(spawnPid, &statusNum, 0);
                         // printf("PARENT(%d): Child(%d) terminated, Exiting!\n", getpid(), actualPid);
                         // exit(0);
                         break;
@@ -373,9 +434,15 @@ void test1(){
 
 
 //questions: 
-//how to do $$
 //background
+// no wait
+
+
 //how to grading script
+//how to do $$
 //kill processes
+//check kill
+
+//ctrl c and z with signals?
+
 //input / output
-// ctrl c and z with signals?
