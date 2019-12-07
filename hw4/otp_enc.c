@@ -86,7 +86,8 @@ int main(int argc, char*argv[]){
     //send plaintext
     // memset(textBuffer, '\0', sizeof(textBuffer));
     // charsWritten = send(socketFD, textBuffer, strlen(textBuffer), 0);
-    charsWritten = write(socketFD, textBuffer, plaintextFileSize - 1);
+    // charsWritten = write(socketFD, textBuffer, plaintextFileSize - 1);
+    charsWritten = write(socketFD, textBuffer, sizeof(textBuffer));
     if(charsWritten < plaintextFileSize - 1){
     // if (charsWritten < strlen(textBuffer)){
         printf("CLIENT: WARNING: Not all data written to socket!\n");
@@ -102,7 +103,8 @@ int main(int argc, char*argv[]){
     }
 
     //write key to server
-    charsWritten = write(socketFD, keyBuffer, keyFileSize - 1);
+    // charsWritten = write(socketFD, keyBuffer, keyFileSize - 1);
+    charsWritten = write(socketFD, keyBuffer, sizeof(keyBuffer));
     if(charsWritten < keyFileSize - 1){
         perror("error: write() failed");
         exit(2);
@@ -112,7 +114,8 @@ int main(int argc, char*argv[]){
 
     //receive encryption from server
     // do{
-    charsRead = read(socketFD, textBuffer, plaintextFileSize - 1);
+    // charsRead = read(socketFD, textBuffer, plaintextFileSize - 1);
+    charsRead = read(socketFD, textBuffer, sizeof(textBuffer));
     // charsRead = read(socketFD, textBuffer, plaintextFileSize);
     // }while(charsRead > 0);
     if (charsRead < 0){
