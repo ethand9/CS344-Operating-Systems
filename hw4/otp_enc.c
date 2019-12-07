@@ -52,8 +52,6 @@ int main(int argc, char*argv[]){
     //check for bad characters
     close(keyFile);
 
-    // printf("%s%d%s%d\n","textSize: ", plaintextFileSize, ". keySize: ", keyFileSize);
-
     if(plaintextFileSize > keyFileSize){
         perror("error: keyFileSize too small");
         exit(1);
@@ -66,8 +64,6 @@ int main(int argc, char*argv[]){
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(portNumber);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
-
-    // bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 
     serverHostInfo = gethostbyname("localhost");
     //error connecting to host
@@ -84,22 +80,12 @@ int main(int argc, char*argv[]){
     //send plaintext
     // memset(buffer1, '\0', sizeof(buffer1));
     // charsWritten = send(socketFD, buffer1, strlen(buffer1), 0);
-    // if(charsWritten < 0){
-    // plaintextFileSize = read(socketFD, buffer1, MAX_BUFFER);
     charsWritten = write(socketFD, buffer1, plaintextFileSize - 1);
     if(charsWritten < plaintextFileSize - 1){
     // if (charsWritten < strlen(buffer1)){
         printf("CLIENT: WARNING: Not all data written to socket!\n");
     }
 
-    // charsWritten = write(socketFD, buffer1, plaintextFileSize - 1);
-    // if (charsWritten < plaintextFileSize - 1)
-    // {
-    //     printf("Error: could not send plaintext to otp_enc_d on port %d\n", port);
-    //     exit(2);
-    // }
-
-    // printf("here ack\n");
     //ack from server
     memset(buffer2, 0, 1);
     charsRead = read(socketFD, buffer2, 1);
@@ -108,62 +94,33 @@ int main(int argc, char*argv[]){
        exit(2);
     }
 
-    // printf("here94\n");
     // send key
-    // charsWritten = write(socketFD, buffer3, keyFileSize - 1);
-    // if (charsWritten < keyFileSize - 1){
-    // charsWritten = write(socketFD, buffer2, keyFileSize - 1);
-    // if (charsWritten < keyFileSize - 1){
     charsWritten = write(socketFD, buffer3, keyFileSize - 1);
     if(charsWritten < keyFileSize - 1){
         perror("error: write enc1() failed");
         exit(2);
     }
 
-
-    // if (charsWritten < keyFileSize - 1){
-    //     // printf("Error: could not send key to otp_enc_d on port %d\n", port);
-    //     perror("error: charsWritten less than keyFileSize")
-    //     exit(2);
-    // }
-
     // memset(buffer1, 0, MAX_BUFFER);
     memset(buffer1, '\0', sizeof(buffer1)); //clear buffer
 
-    // printf("here95\n");
+    // receive ciphertext from otp_enc_d
     // do{
-        // receive ciphertext from otp_enc_d
-        // charsRead = read(socketFD, buffer1, plaintextFileSize - 1);
-        charsRead = read(socketFD, buffer1, plaintextFileSize);
-        // printf("here inside1\n");
-        // printf("%s%d\n", "chars read: ", charsRead);
+    charsRead = read(socketFD, buffer1, plaintextFileSize - 1);
+    // charsRead = read(socketFD, buffer1, plaintextFileSize);
     // }while(charsRead > 0);
-
-    // printf("here96\n");
-    // send key to otp_enc_d
-    // charsWritten = write(socketFD, buffer2, keyFileSize - 1);
-    charsWritten = write(socketFD, buffer2, keyFileSize);
-    // if (charsWritten < keyFileSize - 1){
-    if(charsWritten < keyFileSize){
-        perror("error: write enc2() failed");
-        // printf("Error: could not send key to otp_enc_d on port %d\n", port);
-        exit(2);
-    }
-
-    // // zero out buffer
-    // memset(buffer1, 0, sizeof(buffer1));
-
-    // printf("here97\n");
-    // // do{
-    //     // receive ciphertext from otp_enc_d
-    //     // charsRead = read(socketFD, buffer1, plaintextFileSize - 1);
-    //     charsRead = read(socketFD, buffer1, plaintextFileSize);
-    // // }while (charsRead > 0);
-
-    // printf("here98\n");
     if (charsRead < 0){
        printf("Error receiving ciphertext from otp_enc_d\n");
        exit(2);
+    }
+
+    // send key to otp_enc_d
+    charsWritten = write(socketFD, buffer2, keyFileSize - 1);
+    // charsWritten = write(socketFD, buffer2, keyFileSize);
+    if (charsWritten < keyFileSize - 1){
+    // if(charsWritten < keyFileSize){
+        perror("error: write enc2() failed");
+        exit(2);
     }
 
     // output ciphertext to stdout
@@ -172,12 +129,9 @@ int main(int argc, char*argv[]){
     }
     // add newline to ciphertext ouput
     printf("\n");
-    
-    // printf("here99\n");
 
     // close socket
     close(socketFD);
 
-    // printf("here enc end\n");
     return 0;
 }
