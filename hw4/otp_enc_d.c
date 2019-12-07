@@ -13,12 +13,12 @@
 
 int main(int argc, char*argv[]){
     int i, portNumber, establishedConnectionFD, listenSocketFD, charsWritten, charsRead;
-    int plaintextFile, plaintextFileSize, keyFile, keyFileSize, msgMod, keyMod, cipher;
+    int plaintextFile, plaintextFileSize, keyFile, keyFileSize, msgLetter, keyLetter, cipher;
     int socketFD = socket(AF_INET, SOCK_STREAM, 0); //create socket
     struct sockaddr_in serverAddress, clientAddress;
     socklen_t sizeOfClientInfo;
     pid_t spawnPid = -5;
-    char buffer1[MAX_BUFFER], buffer2[MAX_BUFFER], buffer3[MAX_BUFFER];
+    char textBuffer[MAX_BUFFER], keyBuffer[MAX_BUFFER], encBuffer[MAX_BUFFER];
 
     //too few arguments
     if(argc < 2){
@@ -35,18 +35,23 @@ int main(int argc, char*argv[]){
         exit(1);
     }
 
+    //clear out buffers
+    memset(textBuffer, '\0', sizeof(textBuffer));
+    memset(keyBuffer, '\0', sizeof(keyBuffer));
+    memset(encBuffer, '\0', sizeof(encBuffer));
     memset((char*)&serverAddress, '\0', sizeof(serverAddress)); //clear address struct
+
     //set up server
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(portNumber);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
-    if(bind(socketFD, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0){
+    if(bind(socketFD, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == -1){
         perror("error: bind() failed");
         exit(2);
     }
 
-    if(listen(socketFD, MAX_QUEUE) < 0){
+    if(listen(socketFD, MAX_QUEUE) == -1){
         perror("error: listen() failed");
         exit(2);
     }
@@ -54,43 +59,44 @@ int main(int argc, char*argv[]){
     sizeOfClientInfo = sizeof(clientAddress);
     while(1 == 1){
         establishedConnectionFD = accept(socketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo);
-        if(establishedConnectionFD < 0){
+        if(establishedConnectionFD == -1){
             perror("error: accept() failed");
         }
 
         spawnPid = fork();
         switch(spawnPid){
             case -1: //error
-                perror("error: fork()");
+                perror("error: fork() failed");
                 exit(1);
                 break;
-            case 0: 
-                // zero out buffer
-                memset(buffer1, 0, sizeof(buffer1));
+            case 0: //encryption
+                memset(textBuffer, 0, sizeof(textBuffer)); //clear buffer
 
-                // receive plaintext from otp_enc
-                plaintextFileSize = read(establishedConnectionFD, buffer1, MAX_BUFFER);
+                //read text from client
+                plaintextFileSize = read(establishedConnectionFD, textBuffer, MAX_BUFFER);
                 // plaintextFileSize = lseek(plaintextFile, 0 , SEEK_END);
-                if (plaintextFileSize < 0){
-                    perror("error: read _d1 failed");
+                //read() failed
+                if(plaintextFileSize == -1){
+                    perror("error: read() failed");
                     exit(2);
                 }
 
-                // send acknowledgement to client
-                charsWritten = write(establishedConnectionFD, "!", 1);
-                if (charsWritten < 0){
-                    printf("otp_enc_d error sending acknowledgement to client\n");
-                    exit(2);
-                }
+                // //write ack to client
+                // charsWritten = write(establishedConnectionFD, "!", 1);
+                // if(charsWritten == -1){
+                //     perror("error: write() failed");
+                //     exit(2);
+                // }
 
-                // zero out buffer
-                memset(buffer2, 0, sizeof(buffer2));
+                //clear buffer
+                memset(keyBuffer, 0, sizeof(keyBuffer));
 
-                // receive key from otp_enc
-                keyFileSize = read(establishedConnectionFD, buffer2, MAX_BUFFER);
+                //read key from client
+                keyFileSize = read(establishedConnectionFD, keyBuffer, MAX_BUFFER);
                 // keyFileSize = lseek(keyFile, 0, SEEK_END);
-                if(keyFileSize < 0){
-                    perror("error: read _d2 failed");
+                //read() failed
+                if(keyFileSize == -1){
+                    perror("error: read() failed");
                     exit(2);
                 }
 
@@ -98,58 +104,77 @@ int main(int argc, char*argv[]){
 
                 //validate plaintext
 
-                // compare length of plaintext to that of key
-                if (keyFileSize < plaintextFileSize){ 
-                    printf("otp_enc_d error: key is too short\n");
-                    exit(1);
-                }
-
-
                 //encryption
-                for (i = 0; i < plaintextFileSize; i++){
-                    // change spaces to asterisks
-                    if (buffer1[i] == ' '){
-                        buffer1[i] = '@';
+                for(i = 0; i < plaintextFileSize; i++){
+                    //if character is a space change it to [
+                    //then change value to ascii
+                    if(keyBuffer[i] != ' ')
+                        keyLetter = (int)keyBuffer[i];
+                    else{
+                        keyBuffer[i] = '[';
+                        keyLetter = (int)keyBuffer[i];
                     }
-                    if (buffer2[i] == ' '){
-                        buffer2[i] = '@';
+                    if(textBuffer[i] != ' ')
+                        msgLetter = (int)textBuffer[i];
+                    else{
+                        textBuffer[i] = '[';
+                        msgLetter = (int)textBuffer[i];
                     }
+                    //subtract 65 to change range to 27 characters
+                    keyLetter -= 65;
+                    msgLetter -= 65;
+    
+                    cipher = (keyLetter + msgLetter) % 27; //modular addition
+                    cipher += 65; //revert range
+                    encBuffer[i] = (char)cipher; //change back to letters
 
-                    // type conversion to int
-                    msgMod = (int)buffer1[i];
-                    keyMod = (int)buffer2[i];
+                    if(encBuffer[i] == '[')
+                        encBuffer[i] = ' ';
 
-                    // subtract 64 so that range is 0 - 26 (27 characters)
-                    msgMod = msgMod - 64;
-                    keyMod = keyMod - 64;
+                    // // change spaces to asterisks
+                    // if(textBuffer[i] == ' '){
+                    //     textBuffer[i] = '@';
+                    // }
+                    // if(keyBuffer[i] == ' '){
+                    //     keyBuffer[i] = '@';
+                    // }
 
-                    // combine key and message using modular addition
-                    cipher = (msgMod + keyMod) % 27;
+                    // // type conversion to int
+                    // msgLetter = (int)buffer1[i];
+                    // keyLetter = (int)buffer2[i];
 
-                    // add 64 back to that range is 64 - 90
-                    cipher = cipher + 64;
+                    // // subtract 64 so that range is 0 - 26 (27 characters)
+                    // msgLetter = msgLetter - 64;
+                    // keyLetter = keyLetter - 64;
 
-                    // type conversion back to char
-                    buffer3[i] = (char)cipher + 0;
+                    // // combine key and message using modular addition
+                    // cipher = (msgLetter + keyLetter) % 27;
 
-                    // after encryption, change asterisks to spaces
-                    if (buffer3[i] == '@'){
-                        buffer3[i] = ' ';
-                    }
+                    // // add 64 back to that range is 64 - 90
+                    // cipher = cipher + 64;
+
+                    // // type conversion back to char
+                    // encBuffer[i] = (char)cipher + 0;
+
+                    // // after encryption, change asterisks to spaces
+                    // if(encBuffer[i] == '@'){
+                    //     encBuffer[i] = ' ';
+                    // }
                 }
 
-                //send ciphertext to otp_enc
-                charsWritten = write(establishedConnectionFD, buffer3, plaintextFileSize);
-                if (charsWritten < plaintextFileSize){
-                    printf("otp_enc_d error writing to socket\n");
+                //write encryption to client
+                charsWritten = write(establishedConnectionFD, encBuffer, plaintextFileSize);
+                //not all characters sent
+                if(charsWritten < plaintextFileSize){
+                    perror("error: write() failed");
                     exit(2);
                 }
 
                 break;
-            default: 
+            default: //parent
                 ; //pass
                 break;
         }
-    } // end of while
+    } //end of while
     exit(0);
 }
