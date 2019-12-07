@@ -32,6 +32,12 @@ int main(int argc, char*argv[]){
         exit(1);
     }
 
+    //clear out buffers
+    memset(buffer1, '\0', sizeof(buffer1));
+    memset(buffer2, '\0', sizeof(buffer2));
+    memset(buffer3, '\0', sizeof(buffer3));
+    memset((char*)&serverAddress, '\0', sizeof(serverAddress));
+
     plaintextFile = open(argv[1], O_RDONLY);
     if(plaintextFile < 0){
         perror("error: cannot open file");
@@ -58,8 +64,8 @@ int main(int argc, char*argv[]){
     }
 
 
-    memset(&serverAddress, '\0', sizeof(serverAddress));
-    // memset((char*)&serverAddress, '\0', sizeof(serverAddress)); //clear address struct
+    
+    
     //set up server
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(portNumber);
@@ -87,7 +93,8 @@ int main(int argc, char*argv[]){
     }
 
     //ack from server
-    memset(buffer2, 0, 1);
+    // memset(buffer2, 0, 1);
+    
     charsRead = read(socketFD, buffer2, 1);
     if (charsRead < 0){
        perror("error: read enc1() failed");
