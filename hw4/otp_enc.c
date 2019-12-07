@@ -18,7 +18,7 @@ int main(int argc, char*argv[]){
     struct hostent* serverHostInfo;
     char textBuffer[MAX_BUFFER], tmpBuffer[1], keyBuffer[MAX_BUFFER];
 
-    if (argc < 4){
+    if(argc < 4){
         perror("error: too few arguments");
         exit(1);
     }
@@ -84,28 +84,22 @@ int main(int argc, char*argv[]){
     }
 
     //send plaintext
-    // memset(textBuffer, '\0', sizeof(textBuffer));
-    // charsWritten = send(socketFD, textBuffer, strlen(textBuffer), 0);
-    // charsWritten = write(socketFD, textBuffer, plaintextFileSize - 1);
     charsWritten = write(socketFD, textBuffer, sizeof(textBuffer));
-    if(charsWritten < plaintextFileSize - 1){
-    // if (charsWritten < strlen(textBuffer)){
+    if(charsWritten < plaintextFileSize){
+    // if(charsWritten < strlen(textBuffer)){
         printf("CLIENT: WARNING: Not all data written to socket!\n");
     }
 
     //ack from server
-    // memset(tmpBuffer, 0, 1);
-    
     charsRead = read(socketFD, tmpBuffer, sizeof(tmpBuffer));
-    if (charsRead < 0){
+    if(charsRead < 0){
        perror("error: read() failed");
        exit(2);
     }
 
     //write key to server
-    // charsWritten = write(socketFD, keyBuffer, keyFileSize - 1);
     charsWritten = write(socketFD, keyBuffer, sizeof(keyBuffer));
-    if(charsWritten < keyFileSize - 1){
+    if(charsWritten < keyFileSize){
         perror("error: write() failed");
         exit(2);
     }
@@ -114,17 +108,15 @@ int main(int argc, char*argv[]){
 
     //receive encryption from server
     // do{
-    // charsRead = read(socketFD, textBuffer, plaintextFileSize - 1);
     charsRead = read(socketFD, textBuffer, sizeof(textBuffer));
-    // charsRead = read(socketFD, textBuffer, plaintextFileSize);
     // }while(charsRead > 0);
-    if (charsRead < 0){
+    if(charsRead < 0){
        perror("error: read() failed");
        exit(2);
     }
 
     //print encrypted message
-    for (i = 0; i < plaintextFileSize - 1; i++){
+    for(i = 0; i < plaintextFileSize - 1; i++){
         printf("%c", textBuffer[i]);
     }
     printf("\n");
