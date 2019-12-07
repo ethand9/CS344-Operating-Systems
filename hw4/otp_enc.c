@@ -16,7 +16,7 @@ int main(int argc, char*argv[]){
     int socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
     struct sockaddr_in serverAddress, clientAddress;
     struct hostent* serverHostInfo;
-    char buffer1[MAX_BUFFER], buffer2[1], buffer3[MAX_BUFFER];
+    char textBuffer[MAX_BUFFER], tmpBuffer[1], keyBuffer[MAX_BUFFER];
 
     if (argc < 4){
         perror("error: too few arguments");
@@ -33,9 +33,9 @@ int main(int argc, char*argv[]){
     }
 
     //clear out buffers
-    memset(buffer1, '\0', sizeof(buffer1));
-    memset(buffer2, '\0', sizeof(buffer2));
-    memset(buffer3, '\0', sizeof(buffer3));
+    memset(textBuffer, '\0', sizeof(textBuffer));
+    memset(tmpBuffer, '\0', sizeof(tmpBuffer));
+    memset(keyBuffer, '\0', sizeof(keyBuffer));
     memset((char*)&serverAddress, '\0', sizeof(serverAddress));
 
     plaintextFile = open(argv[1], O_RDONLY);
@@ -44,7 +44,7 @@ int main(int argc, char*argv[]){
         exit(1);
     }
     // plaintextFileSize = lseek(plaintextFile, 0 , SEEK_END);
-    plaintextFileSize = read(plaintextFile, buffer1, MAX_BUFFER);
+    plaintextFileSize = read(plaintextFile, textBuffer, MAX_BUFFER);
     //check for bad characters
     close(plaintextFile);
 
@@ -54,7 +54,7 @@ int main(int argc, char*argv[]){
         exit(1);
     }
     // keyFileSize = lseek(keyFile, 0, SEEK_END);
-    keyFileSize = read(keyFile, buffer3, MAX_BUFFER);
+    keyFileSize = read(keyFile, keyBuffer, MAX_BUFFER);
     //check for bad characters
     close(keyFile);
 
@@ -84,60 +84,48 @@ int main(int argc, char*argv[]){
     }
 
     //send plaintext
-    // memset(buffer1, '\0', sizeof(buffer1));
-    // charsWritten = send(socketFD, buffer1, strlen(buffer1), 0);
-    charsWritten = write(socketFD, buffer1, plaintextFileSize - 1);
+    // memset(textBuffer, '\0', sizeof(textBuffer));
+    // charsWritten = send(socketFD, textBuffer, strlen(textBuffer), 0);
+    charsWritten = write(socketFD, textBuffer, plaintextFileSize - 1);
     if(charsWritten < plaintextFileSize - 1){
-    // if (charsWritten < strlen(buffer1)){
+    // if (charsWritten < strlen(textBuffer)){
         printf("CLIENT: WARNING: Not all data written to socket!\n");
     }
 
     //ack from server
-    // memset(buffer2, 0, 1);
+    // memset(tmpBuffer, 0, 1);
     
-    charsRead = read(socketFD, buffer2, 1);
+    charsRead = read(socketFD, tmpBuffer, sizeof(tmpBuffer));
     if (charsRead < 0){
-       perror("error: read enc1() failed");
+       perror("error: read() failed");
        exit(2);
     }
 
-    // send key
-    charsWritten = write(socketFD, buffer3, keyFileSize - 1);
+    //write key to server
+    charsWritten = write(socketFD, keyBuffer, keyFileSize - 1);
     if(charsWritten < keyFileSize - 1){
-        perror("error: write enc1() failed");
+        perror("error: write() failed");
         exit(2);
     }
 
-    // memset(buffer1, 0, MAX_BUFFER);
-    memset(buffer1, '\0', sizeof(buffer1)); //clear buffer
+    memset(textBuffer, '\0', sizeof(textBuffer)); //clear buffer
 
-    // receive ciphertext from otp_enc_d
+    //receive encryption from server
     // do{
-    charsRead = read(socketFD, buffer1, plaintextFileSize - 1);
-    // charsRead = read(socketFD, buffer1, plaintextFileSize);
+    charsRead = read(socketFD, textBuffer, plaintextFileSize - 1);
+    // charsRead = read(socketFD, textBuffer, plaintextFileSize);
     // }while(charsRead > 0);
     if (charsRead < 0){
-       printf("Error receiving ciphertext from otp_enc_d\n");
+       perror("error: read() failed");
        exit(2);
     }
 
-    // send key to otp_enc_d
-    charsWritten = write(socketFD, buffer2, keyFileSize - 1);
-    // charsWritten = write(socketFD, buffer2, keyFileSize);
-    if (charsWritten < keyFileSize - 1){
-    // if(charsWritten < keyFileSize){
-        perror("error: write enc2() failed");
-        exit(2);
-    }
-
-    // output ciphertext to stdout
+    //print encrypted message
     for (i = 0; i < plaintextFileSize - 1; i++){
-        printf("%c", buffer1[i]);
+        printf("%c", textBuffer[i]);
     }
-    // add newline to ciphertext ouput
     printf("\n");
 
-    // close socket
     close(socketFD);
 
     return 0;
