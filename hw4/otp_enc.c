@@ -18,13 +18,11 @@ int main(int argc, char*argv[]){
     struct hostent* serverHostInfo = gethostbyname("localhost"); //set the host
     char textBuffer[MAX_BUFFER], tmpBuffer[1], keyBuffer[MAX_BUFFER];
 
+    //less than four arguments
     if(argc < 4){
         perror("error: too few arguments");
         exit(1);
     }
-
-    //convert num to int
-    portNumber = atoi(argv[3]);
 
     //socket() failed
     if(socketFD == -1){
@@ -38,6 +36,9 @@ int main(int argc, char*argv[]){
         exit(2);
     }
 
+    //convert num to int
+    portNumber = atoi(argv[3]);
+
     //clear out buffers
     memset(textBuffer, '\0', sizeof(textBuffer));
     memset(tmpBuffer, '\0', sizeof(tmpBuffer));
@@ -45,80 +46,56 @@ int main(int argc, char*argv[]){
     memset((char*)&serverAddress, '\0', sizeof(serverAddress));
 
     //set up server
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(portNumber);
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
-
+    
     //connection failed
     if(connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress))){
         perror("error: connect() failed");
         exit(2);
     }
 
-    plaintextFile = open(argv[1], O_RDONLY); //get text file
-    //invalid file
-    if(plaintextFile == -1){
+    //get text file
+    plaintextFile = open(argv[1], O_RDONLY); 
+    if(plaintextFile == -1){ //invalid file
         perror("error: cannot open file");
         exit(1);
     }
-    // plaintextFileSize = lseek(plaintextFile, 0 , SEEK_END);
-    plaintextFileSize = read(plaintextFile, textBuffer, MAX_BUFFER);
+    plaintextFileSize = read(plaintextFile, textBuffer, MAX_BUFFER); //read the text file
+
     //check for bad characters
+    for(i = 0; i < plaintextFileSize - 1; i++){
+        //check for ascii values out of capital range and not a space
+        if((((int)textBuffer[i] < 65) && (textBuffer[i] != ' ')) || ((int)textBuffer[i] > 90)){
+            perror("error: input has bad characters");
+            exit(1);
+        }
+    }
     close(plaintextFile);
 
-    keyFile = open(argv[2], O_RDONLY); //get key file
-    //invalid file
-    if(keyFile == -1){
+    //get key file
+    keyFile = open(argv[2], O_RDONLY); 
+    if(keyFile == -1){ //invalid file
         perror("error: cannot open file");
         exit(1);
     }
-    // keyFileSize = lseek(keyFile, 0, SEEK_END);
-    keyFileSize = read(keyFile, keyBuffer, MAX_BUFFER);
-    //check for bad characters
-    close(keyFile);
+    keyFileSize = read(keyFile, keyBuffer, MAX_BUFFER); //read the key
 
+    //check for valid key size
     if(plaintextFileSize > keyFileSize){
         perror("error: keyFileSize too small");
         exit(1);
     }
-    
-    //check for valid characters
+    close(keyFile);
 
-
-    
-    
-    
-
-    
-
-    //send plaintext
-    charsWritten = write(socketFD, textBuffer, sizeof(textBuffer));
-    if(charsWritten < plaintextFileSize){
-    // if(charsWritten < strlen(textBuffer)){
-        perror("warning: Not all data written to socket");
-    }
-
-    // //ack from server
-    // charsRead = read(socketFD, tmpBuffer, sizeof(tmpBuffer));
-    // if(charsRead == -1){
-    //    perror("error: read() failed");
-    //    exit(2);
-    // }
-
-    //write key to server
-    charsWritten = write(socketFD, keyBuffer, sizeof(keyBuffer));
-    if(charsWritten < keyFileSize){
-        perror("error: write() failed");
-        exit(2);
-    }
-
-    memset(textBuffer, '\0', sizeof(textBuffer)); //clear buffer
+    charsWritten = write(socketFD, textBuffer, sizeof(textBuffer)); //write text to server
+    charsWritten = write(socketFD, keyBuffer, sizeof(keyBuffer)); //write key to server
 
     //receive encryption from server
-    // do{
+    memset(textBuffer, '\0', sizeof(textBuffer)); //clear buffer
     charsRead = read(socketFD, textBuffer, sizeof(textBuffer));
-    // }while(charsRead > 0);
-    if(charsRead == -1){
+    if(charsRead == -1){ //read() failed
        perror("error: read() failed");
        exit(2);
     }
@@ -128,8 +105,6 @@ int main(int argc, char*argv[]){
         printf("%c", textBuffer[i]);
     }
     printf("\n");
-
-    close(socketFD);
 
     exit(0);
 }
